@@ -1,0 +1,3 @@
+C:/Users/sabze/projects/key-value-db/client/build/CMakeFiles/client.dir
+C:/Users/sabze/projects/key-value-db/client/build/CMakeFiles/edit_cache.dir
+C:/Users/sabze/projects/key-value-db/client/build/CMakeFiles/rebuild_cache.dir

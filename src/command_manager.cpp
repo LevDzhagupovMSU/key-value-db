@@ -3,14 +3,23 @@
 #include "command_manager.hpp"
 #include "logger.hpp"
 
+Command_manager::Command_manager(db_KV_storage& storage, ClientManagerImpl& c_manager) : 
+                            storage_(storage) , c_manager_(c_manager) {}
+
 std::string Command_manager::instruction(const std::string& message, const ClientInfo& client) const{
     std::shared_lock lock(mtx_);
 
-    auto [cmd, key, data] = parser_cmd(message);
+    std::string clean_message = message;
+    clean_message.erase(std::remove(clean_message.begin(), clean_message.end(), '\r'), clean_message.end());
+    clean_message.erase(std::remove(clean_message.begin(), clean_message.end(), '\n'), clean_message.end());
+
+    auto [cmd, key, data] = c_parser_.parser_cmd(clean_message);
+
     std::string access = client.access_;
     std::string client_id = client.id_;
+
     if (cmd.empty()) {
-        logger_instance.info("Unknown command from client: " + client_id + " -> " + message);
+        logger_instance.info("Unknown command from client: " + client_id + " -> " + clean_message);
         return "ERR unknown command\r\n";
     }
     if (is_admin_command(cmd) && !is_admin(access)) {
@@ -50,73 +59,6 @@ std::string Command_manager::instruction(const std::string& message, const Clien
 
     logger_instance.error("Unhandled command: " + cmd + " from " + client_id);
     return "ERR unknown command\r\n";
-}
-
-std::tuple<std::string, int, std::string> Command_manager::parser_cmd(const std::string& message) const{
-    std::string cmd;
-    int key = -1;
-    std::string data;
-
-    if(message.empty()) return std::tuple<std::string, int, std::string>(cmd, key, data);
-
-    auto first_space = message.find(' ');
-    cmd = message.substr(0, first_space);
-
-    for (auto& c : cmd) c = toupper(c);
-
-    while (!cmd.empty() && (cmd.back() == '\r' || cmd.back() == '\n' || 
-    cmd.back() == '\t' || cmd.back() == ' ')) {
-        cmd.pop_back();
-    }  
-
-    if(cmd == "CLIENTS" || cmd == "LOG") return std::tuple<std::string, int, std::string>(cmd, key, data);
-    if (first_space == std::string::npos) {
-        logger_instance.warning("Missing key for command: " + cmd);
-        return {"", -1, ""};
-    }
-
-    if(cmd == "ADMIN"){
-        size_t password_start = first_space + 1;
-
-        std::string password = message.substr(password_start);
-        password.pop_back();
-        return {cmd, -1, password};
-    }
-
-    size_t key_start = first_space + 1;
-    size_t key_end = message.find(' ', key_start);
-    if (key_end == std::string::npos) key_end = message.size();
-    
-    std::string key_str = message.substr(key_start, key_end - key_start);
-    try {
-        key = std::stoi(key_str);
-    } catch (const std::invalid_argument& e) {
-        logger_instance.warning("Invalid key format: " + key_str);
-        return {"", -1, ""};
-    } catch (const std::out_of_range& e) {
-        logger_instance.warning("Key out of range: " + key_str);
-        return {"", -1, ""};
-    }
-
-    if(cmd == "DEL") return std::tuple<std::string, int, std::string>(cmd, key, data);
-
-    if (cmd == "GET" || cmd == "SET") {
-        if (key_end >= message.size()) {
-            if (cmd == "SET") {
-                logger_instance.warning("Missing value for SET command");
-                return {"", -1, ""};
-            }
-            return {cmd, key, ""}; 
-        }
-    }
-
-    size_t value_start = key_end + 1;
-    data = message.substr(value_start);
-    
-    if (!data.empty() && data.back() == '\n') data.pop_back();
-    if (!data.empty() && data.back() == '\r') data.pop_back();
-
-    return std::tuple<std::string, int, std::string>(cmd, key, data); 
 }
 
 std::string Command_manager::format_uptime(std::chrono::steady_clock::time_point connected_since) const {

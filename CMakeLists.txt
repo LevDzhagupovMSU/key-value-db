@@ -14,6 +14,7 @@ add_executable(kv_server
     src/command_manager.cpp
     src/KVStorage.cpp
     src/admin_manager.cpp
+    src/parser.cpp
 
     src/server/server.cpp
     src/server/session.cpp

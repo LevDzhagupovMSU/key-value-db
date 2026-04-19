@@ -25,6 +25,6 @@ private:
     std::string command_set(int key, const std::string& data) const;
     std::string command_del(int key) const;
     std::string command_clients() const;
-    std::string command_log(int max_lines = 100) const;
+    std::string command_log(int max_lines = 30) const;
     std::string command_admin(const std::string& password, const std::string id) const;
 };

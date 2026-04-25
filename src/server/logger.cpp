@@ -15,16 +15,16 @@ std::string logger::get_log_file() const{
     return filename_;
 }
 
-void logger::debug(const std::string messege){ log(DEBUG_, messege); }
+void logger::debug(const std::string messege){ log(DEBUG_, message); }
 
-void logger::info(const std::string messege){ log(INFO_, messege); }
+void logger::info(const std::string messege){ log(INFO_, message); }
 
-void logger::warning(const std::string messege){ log(WARNING_, messege); }
+void logger::warning(const std::string messege){ log(WARNING_, message); }
 
-void logger::error(const std::string messege){ log(ERROR_, messege); }
+void logger::error(const std::string messege){ log(ERROR_, message); }
 
-void logger::log(const logLevel& level, const std::string& messege){
-    std::string dum = "[" + get_time() + "]" + "[" + to_string(level) + "]" + ": " + messege;
+void logger::log(const logLevel& level, const std::string& message){
+    std::string dum = "[" + get_time() + "]" + "[" + to_string(level) + "]" + ": " + message;
 
     std::unique_lock<std::shared_mutex> lock(mtx_);
 

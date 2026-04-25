@@ -19,14 +19,14 @@ public:
 
     std::string get_log_file() const;
 
-    void debug(const std::string messege);
-    void info(const std::string messege);
-    void warning(const std::string messege);
-    void error(const std::string messege);
+    void debug(const std::string message);
+    void info(const std::string message);
+    void warning(const std::string message);
+    void error(const std::string message);
 
     ~logger();
 private:
-    void log(const logLevel& level, const std::string& messege);
+    void log(const logLevel& level, const std::string& message);
     std::string get_time();
     const char* to_string(logLevel level);
 };
